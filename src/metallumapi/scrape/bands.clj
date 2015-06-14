@@ -8,15 +8,20 @@
 (def ^:dynamic *band-id* 148)
 (def ^:dynamic *band-url* (str *base-url* "bands/" *band-name*))
 (def ^:dynamic *discography-url* (str *base-url*
-                            "band/discography/id/"
-                            *band-id* "/tab/"))
+                                      "band/discography/id/"
+                                      *band-id* "/tab/"))
+(def ^:dynamic *band-bio-url* (str *base-url*
+                                   "band/read-more/id/"
+                                   *band-id*))
 
 (def ^:dynamic *band-content* [:div#band_content])
 
 (def ^:dynamic *band-stats* #{[:div#band_stats :dt]
                               [:div#band_stats :dd]})
 
-(def ^:dynamic *discography* [:table.discog])
+(def ^:dynamic *discography* [:table.discog :tbody :tr])
+
+(def ^:dynamic *bio* [:body])
 
 
 (defn fetch-url [url]
@@ -59,10 +64,30 @@
 
 (defn band-discography []
   (letfn [(disco [d]
-            (html/select (fetch-url (str *discography-url* d))
-                         *discography*))]
+            (let [content (html/select (fetch-url (str *discography-url* d))
+                                       *discography*)]
+              (map (fn [row]
+                     (let [[n t y r] (map :content (html/select row [:td]))
+                           rating (first (:content (second r)))]
+                       {:album {:name (first (:content (first n)))
+                                :link (:href (:attrs (first n)))}
+                        :type (first t)
+                        :year (first y)
+                        :rating (if rating
+                                  {:link (:href (:attrs (second r)))}
+                                  (let [rating-match (re-matcher #"(\d+)\s(\((\d+)%\))" rating)
+                                        [_ number _ percentage] (re-find rating-match)]
+                                    {:reviews number
+                                     :avg-rating (str percentage "%")
+                                     :link (:href (:attrs (second r)))}))}))
+                   content)))]
     {:complete (fn [] (disco "all"))
      :main (fn [] (disco "main"))
      :live (fn [] (disco "lives"))
      :demos (fn [] (disco "demos"))
      :misc (fn [] (disco "misc"))}))
+
+(defn band-bio []
+  (let [bio (html/select (fetch-url *band-bio-url*)
+                              *bio*)]
+    bio))
