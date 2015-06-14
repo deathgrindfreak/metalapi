@@ -47,6 +47,11 @@
 (defn band-content []
   (html/select (fetch-url *band-url*) *band-content*))
 
+(defn band-bio []
+  (let [bio (html/select (fetch-url *band-bio-url*)
+                              *bio*)]
+    bio))
+
 (defn band-stats [content]
   (let [stats (reduce-kv (fn [m k v]
                            (assoc m (pretty-key k) v))
@@ -87,7 +92,32 @@
      :demos (fn [] (disco "demos"))
      :misc (fn [] (disco "misc"))}))
 
-(defn band-bio []
-  (let [bio (html/select (fetch-url *band-bio-url*)
-                              *bio*)]
-    bio))
+(defn band-members [content]
+  (letfn [(lineup [l]
+            (let [cnt (first (html/select content
+                                          [(keyword (str "div#band_tab_members_" l))
+                                           :table.lineupTable]))]
+              (map (fn [mem band]
+                     (let [[name instruments] (html/select mem [:td])
+                           bands (remove #{", ex-"}
+                                        (-> band (html/select [:td])
+                                            first :content rest))]
+                       {:member (let [mem-info (first (html/select name [:a]))]
+                                  {:name (-> mem-info :content first)
+                                   :link (-> mem-info :attrs :href)})
+                        :instruments (-> instruments
+                                         :content first
+                                         strip-whitespace)
+                        :bands (map (fn [row]
+                                      (if (:attrs row)
+                                        {:name (-> row :content first)
+                                         :link (-> row :attrs :href)}
+                                        {:name (-> row strip-whitespace
+                                                   (str/replace-first #"[,]ex-" ""))}))
+                                    bands)}))
+                   (html/select cnt [:tr.lineupRow])
+                   (html/select cnt [:tr.lineupBandsRow]))))]
+    {:complete (fn [] (lineup "complete"))
+     :current (fn [] (lineup "current"))
+     :past (fn [] (lineup "past"))
+     :live (fn [] (lineup "live"))}))
