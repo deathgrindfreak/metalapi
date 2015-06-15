@@ -28,7 +28,7 @@
   (html/html-resource (java.net.URL. url)))
 
 (defn drop-colon [strg]
-  (apply str (drop-last strg)))
+  (apply str (remove #{\:} strg)))
 
 (defn pretty-key [ug-str]
   (-> ug-str drop-colon
@@ -40,8 +40,8 @@
   (map str/trim (str/split strg #",")))
 
 (defn strip-whitespace [strg]
-  (apply str
-         (remove #(#{\tab \space \newline} %) strg)))
+  (str/trim (apply str
+                   (remove #(#{\tab \newline} %) strg))))
 
 
 (defn band-content []
