@@ -60,12 +60,12 @@
                                 (map html/text
                                      (html/select content *band-stats*))))]
     (assoc stats
-           :lyrical-themes (-> (:lyrical-themes stats)
-                               str/trim
-                               split-comma)
-           :years-active (-> (:years-active stats)
-                             strip-whitespace
-                             split-comma))))
+           :years-active (map (fn [year]
+                                (let [[_ range _ _ _ name]  (re-matches #"((\d{4})(-[\d\w]+)?)\s*(\(as\s*([\w\s]+)\))?" year)]
+                                  {:range range
+                                   :prev-band-name name
+                                   :link}))
+                              (split-comma (:years-active stats))))))
 
 (defn band-discography []
   (letfn [(disco [d]
