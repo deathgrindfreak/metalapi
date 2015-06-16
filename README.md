@@ -1,14 +1,13 @@
 # metallumapi
 
-A Clojure library designed to ... well, that part is up to you.
+A Clojure library designed to scrape [Encyclopedia Metallum](http://metal-archives.com) and serve it up as an API.
 
 ## Usage
 
-FIXME
+TODO
 
 ## License
 
-Copyright © 2015 FIXME
+Copyright © 2015 Cooper Bell
 
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+Distributed under the [BSD 3 Clause](http://opensource.org/licenses/BSD-3-Clause) license

@@ -53,7 +53,13 @@
     bio))
 
 (defn band-stats [content]
-  (let [stats (reduce-kv (fn [m k v]
+  (let [links (apply hash-map
+                     (mapcat (fn [m]
+                               (let [name (first (:content m))
+                                     link (:href (:attrs m))]
+                                 [name link])
+                               (html/select content [:div#band_stats :a]))))
+        stats (reduce-kv (fn [m k v]
                            (assoc m (pretty-key k) v))
                          {}
                          (apply hash-map
@@ -64,7 +70,7 @@
                                 (let [[_ range _ _ _ name]  (re-matches #"((\d{4})(-[\d\w]+)?)\s*(\(as\s*([\w\s]+)\))?" year)]
                                   {:range range
                                    :prev-band-name name
-                                   :link}))
+                                   :link (name links)}))
                               (split-comma (:years-active stats))))))
 
 (defn band-discography []
