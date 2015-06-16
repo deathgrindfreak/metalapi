@@ -73,18 +73,19 @@
                                        *discography*)]
               (map (fn [row]
                      (let [[n t y r] (map :content (html/select row [:td]))
-                           rating (first (:content (second r)))]
+                           rating (first (:content (second r)))
+                           rating-link (:href (:attrs (second r)))]
                        {:album {:name (first (:content (first n)))
                                 :link (:href (:attrs (first n)))}
                         :type (first t)
                         :year (first y)
-                        :rating (if rating
-                                  {:link (:href (:attrs (second r)))}
-                                  (let [rating-match (re-matcher #"(\d+)\s(\((\d+)%\))" rating)
-                                        [_ number _ percentage] (re-find rating-match)]
-                                    {:reviews number
-                                     :avg-rating (str percentage "%")
-                                     :link (:href (:attrs (second r)))}))}))
+                        :rating (if rating-link
+                                  (let [[_ number _ percentage] (re-matches #"(\d+)\s(\((\d+)%\))"
+                                                                             (if rating rating "") )]
+                                     (if number
+                                       {:reviews number
+                                        :avg-rating (str percentage "%")
+                                        :link rating-link})))}))
                    content)))]
     {:complete (fn [] (disco "all"))
      :main (fn [] (disco "main"))
