@@ -1,0 +1,4 @@
+* ISSUES
+** TODO band-members function currently only lists bands that have a link (probably related to regex in first let expression)
+** TODO calling :complete on band-members returns empty collection
+** TODO Need to figure something out for the bio, perhaps just return html?

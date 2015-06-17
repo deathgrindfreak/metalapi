@@ -6,6 +6,8 @@
 
 (def ^:dynamic *band-name* "Deicide")
 (def ^:dynamic *band-id* 148)
+;(def ^:dynamic *band-name* "...and_Oceans")
+;(def ^:dynamic *band-id* 231)
 (def ^:dynamic *band-url* (str *base-url* "bands/" *band-name*))
 (def ^:dynamic *discography-url* (str *base-url*
                                       "band/discography/id/"
@@ -57,8 +59,8 @@
                      (mapcat (fn [m]
                                (let [name (first (:content m))
                                      link (:href (:attrs m))]
-                                 [name link])
-                               (html/select content [:div#band_stats :a]))))
+                                 [name link]))
+                             (html/select content [:div#band_stats :a])))
         stats (reduce-kv (fn [m k v]
                            (assoc m (pretty-key k) v))
                          {}
@@ -70,7 +72,7 @@
                                 (let [[_ range _ _ _ name]  (re-matches #"((\d{4})(-[\d\w]+)?)\s*(\(as\s*([\w\s]+)\))?" year)]
                                   {:range range
                                    :prev-band-name name
-                                   :link (name links)}))
+                                   :link (get links name)}))
                               (split-comma (:years-active stats))))))
 
 (defn band-discography []
@@ -115,13 +117,13 @@
                         :instruments (-> instruments
                                          :content first
                                          strip-whitespace)
-                        :bands (map (fn [row]
-                                      (if (:attrs row)
-                                        {:name (-> row :content first)
-                                         :link (-> row :attrs :href)}
-                                        {:name (-> row strip-whitespace
-                                                   (str/replace-first #"[,]ex-" ""))}))
-                                    bands)}))
+                        :bands (remove nil?
+                                       (map (fn [row]
+                                              (when-let [name (-> row :content first)]
+                                                (when (re-matches #"[\w ]+" name)
+                                                  {:name name
+                                                   :link (-> row :attrs :href)})))
+                                            bands))}))
                    (html/select cnt [:tr.lineupRow])
                    (html/select cnt [:tr.lineupBandsRow]))))]
     {:complete (fn [] (lineup "complete"))
